@@ -7,7 +7,7 @@ A W.I.P. runtime made in C++ aimed to bring any Scratch 3 project over to the Ni
 
 ![Software running a simple Scratch Project](https://raw.githubusercontent.com/NateXS/Scratch-3DS/refs/heads/main/scratchcats3ds.gif)
 
-## Controls
+## Controls 
 
 
 ![Controls](https://raw.githubusercontent.com/NateXS/Scratch-3DS/refs/heads/main/scratch%203ds%20controls.png)
