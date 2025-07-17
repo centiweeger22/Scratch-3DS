@@ -1,6 +1,8 @@
 #include "sensing.hpp"
 #include "../input.hpp"
 #include "../keyboard.hpp"
+#include "../collision/collisionShape.hpp"
+
 
 BlockResult SensingBlocks::resetTimer(Block& block, Sprite* sprite, Block** waitingBlock, bool* withoutScreenRefresh) {
     BlockExecutor::timer = std::chrono::high_resolution_clock::now();
