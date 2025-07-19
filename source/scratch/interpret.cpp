@@ -1,4 +1,5 @@
 #include "interpret.hpp"
+#include "render.hpp"
 
 std::vector<Sprite*> sprites;
 std::vector<Sprite> spritePool;
@@ -175,7 +176,6 @@ void loadSprites(const nlohmann::json& json){
 
                 for(const auto& [inputName,inputData] : data["inputs"].items()){
                     ParsedInput parsedInput;
-                   // parsedInput.originalJson = inputData;
 
                     int type = inputData[0];
                     auto& inputValue = inputData[1];
@@ -183,9 +183,7 @@ void loadSprites(const nlohmann::json& json){
 
                     if(type == 1){
                         parsedInput.inputType = ParsedInput::LITERAL;
-                        //std::cout << "doing it! " << inputValue.dump() << std::endl;
                         parsedInput.literalValue = Value::fromJson(inputValue);
-                        //std::cout << "literal value = " << parsedInput.literalValue.asString();
 
                     } else if(type == 3){
                         if(inputValue.is_array()){
@@ -193,6 +191,7 @@ void loadSprites(const nlohmann::json& json){
                             parsedInput.variableId = inputValue[2].get<std::string>();
                         } else{
                             parsedInput.inputType = ParsedInput::BLOCK;
+                            if(!inputValue.is_null())
                             parsedInput.blockId = inputValue.get<std::string>();
                         }
                     } else if(type == 2){
@@ -228,7 +227,19 @@ void loadSprites(const nlohmann::json& json){
 
                 std::string rawArgumentDefaults = data["mutation"]["argumentdefaults"];
                 nlohmann::json parsedAD = nlohmann::json::parse(rawArgumentDefaults);
-                newCustomBlock.argumentDefaults = parsedAD.get<std::vector<std::string>>();
+                //newCustomBlock.argumentDefaults = parsedAD.get<std::vector<std::string>>();
+
+                for (const auto& item : parsedAD) {
+                    if (item.is_string()) {
+                        newCustomBlock.argumentDefaults.push_back(item.get<std::string>());
+                    } else if (item.is_number_integer()) {
+                        newCustomBlock.argumentDefaults.push_back(std::to_string(item.get<int>()));
+                    } else if (item.is_number_float()) {
+                        newCustomBlock.argumentDefaults.push_back(std::to_string(item.get<double>()));
+                    } else {
+                        newCustomBlock.argumentDefaults.push_back(item.dump());
+                    }
+                }
 
                 std::string rawArgumentIds = data["mutation"]["argumentids"];
                 nlohmann::json parsedAID = nlohmann::json::parse(rawArgumentIds);
@@ -358,27 +369,38 @@ void loadSprites(const nlohmann::json& json){
         }
     }
     // set advanced project settings properties
+    int wdth = 0;
+    int hght = 0;
+    int framerate = 0;
+
     try{
-       int framerate = config["framerate"].get<int>();
+       framerate = config["framerate"].get<int>();
        Scratch::FPS = framerate;
     }
     catch(...){
         //std::cerr << "no framerate property." << std::endl;
     }
         try{
-       int wdth = config["width"].get<int>();
+       wdth = config["width"].get<int>();
        Scratch::projectWidth = wdth;
     }
     catch(...){
         //std::cerr << "no width property." << std::endl;
     }
         try{
-       int hght = config["height"].get<int>();
+       hght = config["height"].get<int>();
        Scratch::projectHeight = hght;
     }
     catch(...){
         //std::cerr << "no height property." << std::endl;
     }
+
+    if(wdth == 400 && hght == 480)
+    Render::renderMode = Render::BOTH_SCREENS;
+    else if(wdth == 320 && hght == 240)
+    Render::renderMode = Render::BOTTOM_SCREEN_ONLY;
+    else
+    Render::renderMode = Render::TOP_SCREEN_ONLY;
     
     // if unzipped, load initial sprites
     if(projectType == UNZIPPED){
@@ -434,22 +456,32 @@ std::vector<Block*> getBlockChain(std::string blockId,std::string* outID){
         blockChain.push_back(currentBlock);
         if(outID)
         *outID += currentBlock->id;
-        if(!currentBlock->parsedInputs["SUBSTACK"].originalJson[1].is_null()){
+
+        auto substackIt = currentBlock->parsedInputs.find("SUBSTACK");
+        if(substackIt != currentBlock->parsedInputs.end() && 
+           (substackIt->second.inputType == ParsedInput::BOOLEAN || substackIt->second.inputType == ParsedInput::BLOCK) &&
+           !substackIt->second.blockId.empty()){
+            
             std::vector<Block*> subBlockChain;
-            subBlockChain = getBlockChain(currentBlock->parsedInputs["SUBSTACK"].originalJson[1],outID);
+            subBlockChain = getBlockChain(substackIt->second.blockId, outID);
             for(auto& block : subBlockChain){
                 blockChain.push_back(block);
                 if(outID)
-                *outID += block->id;
+                    *outID += block->id;
             }
         }
-        if(!currentBlock->parsedInputs["SUBSTACK2"].originalJson[1].is_null()){
+        
+        auto substack2It = currentBlock->parsedInputs.find("SUBSTACK2");
+        if(substack2It != currentBlock->parsedInputs.end() && 
+           (substack2It->second.inputType == ParsedInput::BOOLEAN || substack2It->second.inputType == ParsedInput::BLOCK) &&
+           !substack2It->second.blockId.empty()){
+            
             std::vector<Block*> subBlockChain;
-            subBlockChain = getBlockChain(currentBlock->parsedInputs["SUBSTACK2"].originalJson[1],outID);
+            subBlockChain = getBlockChain(substack2It->second.blockId, outID);
             for(auto& block : subBlockChain){
                 blockChain.push_back(block);
                 if(outID)
-                *outID += block->id;
+                    *outID += block->id;
             }
         }
         currentBlock = findBlock(currentBlock->next);
