@@ -1,5 +1,5 @@
 #include "collisionPoint.hpp"
-#define COLLISION_POINT_COUNT 25
+#define COLLISION_POINT_COUNT 250
 #ifndef C_SHAPE_H
 #define C_SHAPE_H
 class CollisionShape{
