@@ -2,8 +2,8 @@
 #include "../input.hpp"
 #include "../keyboard.hpp"
 #include "../collision/collisionShape.hpp"
-#include "../../3ds/image.hpp"
-#include "../../3ds/render.hpp"
+#include "image.hpp"
+#include "render.hpp"
 #include "../scratch/collision/collisionShapeFromImage.hpp"
 
 
