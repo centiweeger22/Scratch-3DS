@@ -58,7 +58,6 @@ int main(int argc, char **argv)
 			break;
 		}
 	}
-	
 
 	exitApp();
 	return 0;

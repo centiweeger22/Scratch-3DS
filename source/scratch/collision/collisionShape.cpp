@@ -1,10 +1,20 @@
 #include <cmath>
 #include "collisionShape.hpp"
-#include <bits/stdc++.h>
+#include "../math.hpp"
 CollisionShape::CollisionShape(){
     float radius = 50;
     for (int i = 0;i<COLLISION_POINT_COUNT;i++){
-        float angle = i*2*3.141592/COLLISION_POINT_COUNT;
+        float angle = i*2*M_PI/COLLISION_POINT_COUNT;
+        originalPoints[i].x = cos(angle)*radius;
+        originalPoints[i].y = sin(angle)*radius;
+    }
+    for (int i = 0; i < COLLISION_POINT_COUNT; ++i) {
+        points[i] = originalPoints[i];
+    }
+}
+CollisionShape::CollisionShape(float radius){
+    for (int i = 0;i<COLLISION_POINT_COUNT;i++){
+        float angle = i*2*M_PI/COLLISION_POINT_COUNT;
         originalPoints[i].x = cos(angle)*radius;
         originalPoints[i].y = sin(angle)*radius;
     }
@@ -30,7 +40,6 @@ bool CollisionShape::CheckCollision(CollisionShape otherShape){
 
                 float lineSlope = (point1.y-point2.y)/(point1.x-point2.x);
                 if (lineSlope!=0){
-                    float lineYIntercept = point1.y-point1.x*lineSlope;
                     if ((point1.y > pointY) != (point2.y > pointY)) {
                         float intersectX = (point2.x - point1.x) * (pointY - point1.y) / (point2.y - point1.y) + point1.x;
                         if (intersectX > pointX) hitCount++;
