@@ -2,28 +2,32 @@
 #include <citro2d.h>
 #include "collisionShape.hpp"
 #include <iostream>
+#include "image.hpp"
 
-CollisionShape CollisionShapeFromImageData(C2D_Image* image) {
-    C3D_Tex* baseTex = image->tex;
-    
-    const uint32_t* pixels = (const uint32_t*)baseTex->data;
-    int width = baseTex->width;
-    int height = baseTex->height;
+
+CollisionShape CollisionShapeFromImageData(Image::ImageRGBA image) {
+    // C3D_Tex* baseTex = image->tex;
+    unsigned char* data = image.data;
+    // const uint32_t* pixels = (const uint32_t*)baseTex->data;
+    int width = image.width;
+    int height = image.height;
 
     // get center of visible pixels
     float sumX = 0.0f, sumY = 0.0f;
     int count = 0;
 
-    for (int y = 0; y < height; y++) {
+    for (int y = 50; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            uint32_t pixel = pixels[y * width + x];
-            uint8_t a = (pixel >> 24) & 0xFF;
+            // uint8_t r = data[y * width * 4 + x * 4 + 0];
+            // uint8_t g = data[y * width * 4 + x * 4 + 1];
+            // uint8_t b = data[y * width * 4 + x * 4 + 2];
+            uint8_t a = data[y * width * 4 + x * 4 + 3];
 
             if (a > 0) { // its not transparent so it exists
                 sumX += x;
                 sumY += y;
                 count++;
-            }
+            }            
         }
     }
     CollisionShape shape = CollisionShape(std::max(width,height)*0.25);
@@ -41,10 +45,12 @@ CollisionShape CollisionShapeFromImageData(C2D_Image* image) {
     float radiusCircle[COLLISION_POINT_COUNT] = {0};
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            uint32_t pixel = pixels[y * width + x];
-            uint8_t a = (pixel >> 24) & 0xFF;
+            // uint8_t r = data[y * width * 4 + x * 4 + 0];
+            // uint8_t g = data[y * width * 4 + x * 4 + 1];
+            // uint8_t b = data[y * width * 4 + x * 4 + 2];
+            uint8_t a = data[y * width * 4 + x * 4 + 3];
 
-            if (a > 160) {
+            if (a > 0) {
                 float dx = x - centerX;
                 float dy = y - centerY;
                 float dist = sqrt(pow(dx,2)+pow(dy,2));
@@ -59,12 +65,12 @@ CollisionShape CollisionShapeFromImageData(C2D_Image* image) {
     }
 
     // make the shape with all the radii that were found
-    // for (int i = 0; i < COLLISION_POINT_COUNT; i++) {
-    //     float angle = i * 2.0f * M_PI / COLLISION_POINT_COUNT+M_PI/2;
-    //     shape.originalPoints[i].x = cos(angle) * radiusCircle[i]*0.4;
-    //     shape.originalPoints[i].y = sin(angle) * radiusCircle[i]*0.4;
-    //     shape.points[i] = shape.originalPoints[i];
-    // }
+    for (int i = 0; i < COLLISION_POINT_COUNT; i++) {
+        float angle = i * 2.0f * M_PI / COLLISION_POINT_COUNT+M_PI/2;
+        shape.originalPoints[i].x = -(cos(angle) * radiusCircle[i]-centerY+width/2)*0.5;
+        shape.originalPoints[i].y = (sin(angle) * radiusCircle[i])*0.5;
+        shape.points[i] = shape.originalPoints[i];
+    }
 
     return shape;
 }

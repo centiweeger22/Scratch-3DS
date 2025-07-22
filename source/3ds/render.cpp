@@ -71,7 +71,7 @@ void renderImage(C2D_Image *image, Sprite* currentSprite, std::string costumeId,
                 if(imageC2Ds.find(costumeId) == imageC2Ds.end() || image->tex == nullptr || image->subtex == nullptr){
                 C2D_Image newImage = get_C2D_Image(rgba);
                 imageC2Ds[costumeId].image = newImage;
-                imageCollisions[costumeId] = CollisionShapeFromImageData(&newImage);
+                imageCollisions[costumeId] = CollisionShapeFromImageData(rgba);
                 std::cout << "sprites we have:" << std::endl;
                 for (const auto& pair : imageCollisions) {
                     std::cout << "Key: " << pair.first << std::endl;
